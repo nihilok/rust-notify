@@ -10,7 +10,7 @@ mod tests {
 
     #[test]
     fn it_works() {
-        let notification = NotificationPartsBuilder::default()
+        let notification = NotificationParamsBuilder::default()
             .title("TEST NOTIFICATION")
             .subtitle("Subtitle")
             .message("This is the message.")
