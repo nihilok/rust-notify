@@ -6,5 +6,5 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-command_line = {path = "../command_line" }
+command_line = {git = "https://github.com/nihilok/rust-command-line.git" }
 derive_builder = "0.12.0"

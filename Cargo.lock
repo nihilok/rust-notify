@@ -5,6 +5,7 @@ version = 3
 [[package]]
 name = "command_line"
 version = "0.1.0"
+source = "git+https://github.com/nihilok/rust-command-line.git#8271150b2f42f65895d8a6f8ec6b3c2dab9820ad"
 
 [[package]]
 name = "darling"
