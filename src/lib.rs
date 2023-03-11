@@ -1,8 +1,6 @@
 use command_line::{command_exists, execute_command};
 use std::process;
 
-#[macro_use]
-extern crate derive_builder;
 
 #[cfg(test)]
 mod tests {
@@ -26,7 +24,11 @@ mod tests {
 
 const TERMINAL_NOTIFIER_UNSAFE_CHARS: [char; 2] = ['[', ']'];
 
-#[derive(Default, Builder, Debug)]
+
+#[macro_use]
+extern crate derive_builder;
+
+#[derive(Default, Debug, Builder)]
 pub struct Notification<'notification> {
     #[builder(setter(into))]
     pub title: &'notification str,
