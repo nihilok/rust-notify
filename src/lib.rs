@@ -1,30 +1,6 @@
 use command_line::{command_exists, execute_command};
 use std::process;
 
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        match NotificationBuilder::default()
-            .title("TEST NOTIFICATION")
-            .subtitle("Subtitle")
-            .message("This is the message.")
-            .sound("Pop")
-            .open("https://google.com")
-            .build() {
-            Ok(notification) => notification.notify(),
-            Err(err) => { dbg!("{}", err); }
-        }
-        // you should see a desktop notification
-    }
-}
-
-const TERMINAL_NOTIFIER_UNSAFE_CHARS: [char; 2] = ['[', ']'];
-
-
 #[macro_use]
 extern crate derive_builder;
 
@@ -49,6 +25,53 @@ impl Notification<'_> {
 }
 
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_works_with_all_params() {
+        match NotificationBuilder::default()
+            .title("TEST NOTIFICATION")
+            .subtitle("Subtitle")
+            .message("This is the message.")
+            .sound("Pop")
+            .open("https://google.com")
+            .build() {
+            Ok(notification) => notification.notify(),
+            Err(err) => { dbg!("{}", err); }
+        }
+        // you should see a desktop notification
+    }
+
+    #[test]
+    fn it_works_with_no_optional_params() {
+        match NotificationBuilder::default()
+            .title("TEST NOTIFICATION")
+            .subtitle("Subtitle")
+            .message("This is the message.")
+            .build() {
+            Ok(notification) => notification.notify(),
+            Err(err) => { dbg!("{}", err); }
+        }
+        // you should see a desktop notification
+    }
+
+    #[test]
+    fn it_fails_with_no_message_param() {
+        match NotificationBuilder::default()
+            .title("TEST NOTIFICATION")
+            .subtitle("Subtitle")
+            .build() {
+            Ok(notification) => notification.notify(),
+            Err(err) => { assert_eq!(err.to_string(), "`message` must be initialized"); }
+        }
+        // you should not see a desktop notification
+    }
+
+
+}
+
 
 fn _notify(notification: &Notification) {
     let title = notification.title;
@@ -65,13 +88,16 @@ fn _notify(notification: &Notification) {
             None => "",
         };
 
-        terminal_notifier_command(title, subtitle, message, sound_str, open_str);
+        _terminal_notifier_command(title, subtitle, message, sound_str, open_str);
     } else {
-        notify_send_command(title, subtitle, message);
+        _notify_send_command(title, subtitle, message);
     }
 }
 
-fn terminal_notifier_command(title: &str, subtitle: &str, message: &str, sound: &str, open: &str) {
+
+const TERMINAL_NOTIFIER_UNSAFE_CHARS: [char; 2] = ['[', ']'];
+
+fn _terminal_notifier_command(title: &str, subtitle: &str, message: &str, sound: &str, open: &str) {
     // check terminal-notifier is installed
     if !command_exists("terminal-notifier -h") {
         println!("terminal-notifier is not available. Is it installed?");
@@ -99,7 +125,7 @@ fn terminal_notifier_command(title: &str, subtitle: &str, message: &str, sound: 
     execute_command(&format!("terminal-notifier {notification_str}"), true);
 }
 
-fn notify_send_command(title: &str, subtitle: &str, message: &str) {
+fn _notify_send_command(title: &str, subtitle: &str, message: &str) {
     // check notify-send is installed
     if !command_exists("notify-send -h") {
         println!("notify-send is not available. Is it installed?");
