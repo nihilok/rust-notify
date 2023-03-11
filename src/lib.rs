@@ -39,7 +39,10 @@ mod tests {
             .open("https://google.com")
             .build() {
             Ok(notification) => notification.notify(),
-            Err(err) => { dbg!("{}", err); }
+            Err(err) => {
+                dbg!(err);
+                assert!(false);
+            }
         }
         // you should see a desktop notification
     }
@@ -52,7 +55,10 @@ mod tests {
             .message("This is the message.")
             .build() {
             Ok(notification) => notification.notify(),
-            Err(err) => { dbg!("{}", err); }
+            Err(err) => {
+                dbg!(err);
+                assert!(false);
+            }
         }
         // you should see a desktop notification
     }
@@ -63,7 +69,10 @@ mod tests {
             .title("TEST NOTIFICATION")
             .subtitle("Subtitle")
             .build() {
-            Ok(notification) => notification.notify(),
+            Ok(notification) => {
+                notification.notify();
+                assert!(false);
+            },
             Err(err) => { assert_eq!(err.to_string(), "`message` must be initialized"); }
         }
         // you should not see a desktop notification
