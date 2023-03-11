@@ -68,8 +68,6 @@ mod tests {
         }
         // you should not see a desktop notification
     }
-
-
 }
 
 
