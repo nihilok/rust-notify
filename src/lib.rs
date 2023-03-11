@@ -10,24 +10,26 @@ mod tests {
 
     #[test]
     fn it_works() {
-        let notification = NotificationParamsBuilder::default()
+        match NotificationBuilder::default()
             .title("TEST NOTIFICATION")
             .subtitle("Subtitle")
             .message("This is the message.")
             .sound("Pop")
             .open("https://google.com")
-            .build()
-            .expect("Could not build notification");
+            .build() {
+            Ok(notification) => notification.notify(),
+            Err(err) => { dbg!("{}", err); }
+        }
 
-        notify(&notification)
+
         // you should see a notification
     }
 }
 
 const TERMINAL_NOTIFIER_UNSAFE_CHARS: [char; 2] = ['[', ']'];
 
-#[derive(Default, Builder)]
-pub struct NotificationParams<'notification> {
+#[derive(Default, Builder, Debug)]
+pub struct Notification<'notification> {
     #[builder(setter(into))]
     pub title: &'notification str,
     #[builder(setter(into))]
@@ -40,7 +42,15 @@ pub struct NotificationParams<'notification> {
     pub open: Option<&'notification str>,
 }
 
-pub fn notify(notification: &NotificationParams) {
+impl Notification<'_> {
+    pub fn notify(&self) {
+        _notify(&self)
+    }
+}
+
+
+
+fn _notify(notification: &Notification) {
     let title = notification.title;
     let subtitle = notification.subtitle;
     let message = notification.message;
