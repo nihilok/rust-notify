@@ -20,9 +20,7 @@ mod tests {
             Ok(notification) => notification.notify(),
             Err(err) => { dbg!("{}", err); }
         }
-
-
-        // you should see a notification
+        // you should see a desktop notification
     }
 }
 
