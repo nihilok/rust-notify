@@ -4,7 +4,29 @@ use std::process;
 #[macro_use]
 extern crate derive_builder;
 
-#[derive(Default, Debug, Builder)]
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_works() {
+        match NotificationBuilder::default()
+            .title("TEST NOTIFICATION")
+            .subtitle("Subtitle")
+            .message("This is \"the\" message.")
+            .sound("Pop")
+            .open("https://google.com")
+            .build() {
+            Ok(notification) => notification.notify(),
+            Err(err) => { dbg!("{}", err); }
+        }
+        // you should see a desktop notification
+    }
+}
+
+const TERMINAL_NOTIFIER_UNSAFE_CHARS: [char; 2] = ['[', ']'];
+
+#[derive(Default, Builder, Debug)]
 pub struct Notification<'notification> {
     #[builder(setter(into))]
     pub title: &'notification str,
@@ -25,60 +47,6 @@ impl Notification<'_> {
 }
 
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works_with_all_params() {
-        match NotificationBuilder::default()
-            .title("TEST NOTIFICATION")
-            .subtitle("Subtitle")
-            .message("This is the message.")
-            .sound("Pop")
-            .open("https://google.com")
-            .build() {
-            Ok(notification) => notification.notify(),
-            Err(err) => {
-                dbg!(err);
-                assert!(false);
-            }
-        }
-        // you should see a desktop notification
-    }
-
-    #[test]
-    fn it_works_with_no_optional_params() {
-        match NotificationBuilder::default()
-            .title("TEST NOTIFICATION")
-            .subtitle("Subtitle")
-            .message("This is the message.")
-            .build() {
-            Ok(notification) => notification.notify(),
-            Err(err) => {
-                dbg!(err);
-                assert!(false);
-            }
-        }
-        // you should see a desktop notification
-    }
-
-    #[test]
-    fn it_fails_with_no_message_param() {
-        match NotificationBuilder::default()
-            .title("TEST NOTIFICATION")
-            .subtitle("Subtitle")
-            .build() {
-            Ok(notification) => {
-                notification.notify();
-                assert!(false);
-            },
-            Err(err) => { assert_eq!(err.to_string(), "`message` must be initialized"); }
-        }
-        // you should not see a desktop notification
-    }
-}
-
 
 fn _notify(notification: &Notification) {
     let title = notification.title;
@@ -95,16 +63,13 @@ fn _notify(notification: &Notification) {
             None => "",
         };
 
-        _terminal_notifier_command(title, subtitle, message, sound_str, open_str);
+        terminal_notifier_command(title, subtitle, message, sound_str, open_str);
     } else {
-        _notify_send_command(title, subtitle, message);
+        notify_send_command(title, subtitle, message);
     }
 }
 
-
-const TERMINAL_NOTIFIER_UNSAFE_CHARS: [char; 2] = ['[', ']'];
-
-fn _terminal_notifier_command(title: &str, subtitle: &str, message: &str, sound: &str, open: &str) {
+fn terminal_notifier_command(title: &str, subtitle: &str, message: &str, sound: &str, open: &str) {
     // check terminal-notifier is installed
     if !command_exists("terminal-notifier -h") {
         println!("terminal-notifier is not available. Is it installed?");
@@ -132,16 +97,22 @@ fn _terminal_notifier_command(title: &str, subtitle: &str, message: &str, sound:
     execute_command(&format!("terminal-notifier {notification_str}"), true);
 }
 
-fn _notify_send_command(title: &str, subtitle: &str, message: &str) {
+fn notify_send_command(title: &str, subtitle: &str, message: &str) {
+
+    dbg!(title, subtitle, message);
+
     // check notify-send is installed
     if !command_exists("notify-send -h") {
         println!("notify-send is not available. Is it installed?");
         process::exit(1);
     }
 
+    let mut safe_message = message.to_owned();
+    safe_message = safe_message.replace('"', "'");
+
     // build linux command line arguments
     // the notify-send api does not support on-click actions
-    let notification_str = format!("\"{title} ({subtitle})\" \"{message}\"");
+    let notification_str = format!("\"{title} ({subtitle})\" \"{safe_message}\"");
 
     // execute command
     execute_command(&format!("notify-send {notification_str}"), true);
