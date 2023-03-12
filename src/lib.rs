@@ -24,7 +24,6 @@ mod tests {
     }
 }
 
-const TERMINAL_NOTIFIER_UNSAFE_CHARS: [char; 2] = ['[', ']'];
 
 #[derive(Default, Builder, Debug)]
 pub struct Notification<'notification> {
@@ -47,27 +46,28 @@ impl Notification<'_> {
 }
 
 
-
 fn _notify(notification: &Notification) {
     let title = notification.title;
     let subtitle = notification.subtitle;
     let message = notification.message;
+    let open_str = match notification.open {
+            Some(s) => s,
+            None => "",
+        };
+
     if cfg!(target_os = "macos") {
         let sound_str = match notification.sound {
             Some(s) => s,
             None => "default",
         };
-
-        let open_str = match notification.open {
-            Some(s) => s,
-            None => "",
-        };
-
         terminal_notifier_command(title, subtitle, message, sound_str, open_str);
     } else {
-        notify_send_command(title, subtitle, message);
+        notify_send_command(title, subtitle, message, open_str);
     }
 }
+
+
+const TERMINAL_NOTIFIER_UNSAFE_CHARS: [char; 2] = ['[', ']'];
 
 fn terminal_notifier_command(title: &str, subtitle: &str, message: &str, sound: &str, open: &str) {
     // check terminal-notifier is installed
@@ -97,10 +97,7 @@ fn terminal_notifier_command(title: &str, subtitle: &str, message: &str, sound: 
     execute_command(&format!("terminal-notifier {notification_str}"), true);
 }
 
-fn notify_send_command(title: &str, subtitle: &str, message: &str) {
-
-    dbg!(title, subtitle, message);
-
+fn notify_send_command(title: &str, subtitle: &str, message: &str, url: &str) {
     // check notify-send is installed
     if !command_exists("notify-send -h") {
         println!("notify-send is not available. Is it installed?");
@@ -111,8 +108,10 @@ fn notify_send_command(title: &str, subtitle: &str, message: &str) {
     safe_message = safe_message.replace('"', "'");
 
     // build linux command line arguments
-    // the notify-send api does not support on-click actions
-    let notification_str = format!("\"{title} ({subtitle})\" \"{safe_message}\"");
+    let mut notification_str = format!("\"{title} ({subtitle})\" \"{safe_message}\"");
+    if url.len() > 0 {
+        notification_str.push_str(&format!(" {url}"))
+    }
 
     // execute command
     execute_command(&format!("notify-send {notification_str}"), true);
